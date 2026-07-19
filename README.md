@@ -111,6 +111,16 @@ Both projects are by the same author. They cover different parts of the same ide
 - [ ] **v0.3** — `pinpoint sync` to optionally sync across machines (opt-in, E2E encrypted)
 - [ ] **v0.4** — `pinpoint recall-ai` integration: import starred prompts from recall-ai
 
+## See also — other kezhu-ai AI dev tools
+
+pinpoint is one of four Rust CLIs in the same family:
+
+- **[recall-ai](https://github.com/kezhu-ai/recall-ai)** — search every AI conversation you've ever had, locally. The passive side (firehose search) of the same idea.
+- **[ctxguard](https://github.com/kezhu-ai/ctxguard)** — context-window budget enforcer for AI agents. Catches when your saved prompt burns 200k tokens.
+- **[mcp-sentry](https://github.com/kezhu-ai/mcp-sentry)** — policy-as-code firewall for MCP servers.
+
+The kit: **pinpoint** to save the keepers, **ctxguard** to budget agent use, **recall-ai** to search the firehose, **mcp-sentry** to gate the servers.
+
 ## Author
 
 Made by [@kezhu-ai](https://github.com/kezhu-ai) — also the author of [ctxguard](https://github.com/kezhu-ai/ctxguard), [mcp-sentry](https://github.com/kezhu-ai/mcp-sentry), and [recall-ai](https://github.com/kezhu-ai/recall-ai).
