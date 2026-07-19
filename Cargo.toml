@@ -1,0 +1,31 @@
+[package]
+name = "pinpoint"
+version = "0.1.0"
+edition = "2021"
+description = "Your ~/.bash_history but for AI prompts. Save, search, and replay the prompts you actually want to keep."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/kezhu-ai/pinpoint"
+keywords = ["ai", "cli", "prompts", "log", "search", "replay", "claude-code"]
+categories = ["command-line-utilities", "text-processing", "database"]
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+tabled = "0.15"
+dirs = "5"
+rusqlite = { version = "0.31", features = ["bundled"] }
+regex = "1"
+shell-words = "1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+
+[[bin]]
+name = "pinpoint"
+path = "src/main.rs"
