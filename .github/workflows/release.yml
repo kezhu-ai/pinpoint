@@ -1,0 +1,19 @@
+name: release
+
+# Uses the shared reusable workflow from kezhu-ai/awesome-ai-history-tools.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: kezhu-ai/awesome-ai-history-tools/.github/workflows/release.yml@main
+    with:
+      tool_name: pinpoint
+      binary: pinpoint
+      binary_windows: pinpoint.exe
+      allow_macos_failure: true
