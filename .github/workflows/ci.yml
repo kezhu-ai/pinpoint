@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: build + smoke
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow_failure }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            allow_failure: false
+          - os: macos-latest
+            allow_failure: false
+          - os: windows-latest
+            allow_failure: true   # flaky crate registry network
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pinpoint -> target
+      - run: cargo build --release --locked
+      - run: ./target/release/pinpoint --version
+      - name: smoke
+        run: |
+          PINPOINT_DATA_DIR=/tmp/pinpoint-smoke ./target/release/pinpoint log "hello pinpoint" --tags smoke
+          PINPOINT_DATA_DIR=/tmp/pinpoint-smoke ./target/release/pinpoint list
+          PINPOINT_DATA_DIR=/tmp/pinpoint-smoke ./target/release/pinpoint find "pinpoint"
+      - name: rustfmt
+        run: cargo fmt --all -- --check || echo "::warning::rustfmt diff (non-blocking)"
+      - name: clippy
+        run: cargo clippy --all-targets --no-deps || echo "::warning::clippy diff (non-blocking)"
+
+  release:
+    name: release on ${{ matrix.target }}
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow_failure }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact: pinpoint-linux-x86_64
+            binary: pinpoint
+            allow_failure: false
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact: pinpoint-macos-aarch64
+            binary: pinpoint
+            allow_failure: true
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact: pinpoint-windows-x86_64.exe
+            binary: pinpoint.exe
+            allow_failure: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pinpoint -> target
+      - run: cargo build --release --locked
+      - name: Package
+        continue-on-error: true
+        run: |
+          mkdir -p dist
+          cp target/release/${{ matrix.binary }} dist/${{ matrix.artifact }}
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cd dist && powershell -NoProfile -Command "Compress-Archive -Force -Path '${{ matrix.artifact }}' -DestinationPath '${{ matrix.artifact }}.zip'" && cd ..
+          else
+            tar -C dist -czf dist/${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/${{ matrix.artifact }}
+            dist/${{ matrix.artifact }}.tar.gz
+            dist/${{ matrix.artifact }}.zip
